@@ -1,0 +1,87 @@
+.card-header {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.card-body h5 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+
+.alert-danger {
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Mensaje de éxito personalizado */
+.custom-success-message {
+    background-color: #e6ffe6; /* Fondo verde claro */
+    border: 1px solid #b3ffb3; /* Borde verde */
+    color: #026602; /* Texto verde oscuro */
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra */
+    margin-top: 15px;
+    animation: fadeIn 0.5s ease-out; /* Animación de aparición */
+}
+
+/* Ícono del mensaje */
+.success-icon {
+    font-size: 20px;
+    color: #026602;
+}
+
+/* Animación de aparición */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px); /* Movimiento inicial hacia arriba */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Posición final */
+    }
+}
+
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f9f9f9; /* Fondo alterno en filas */
+}
+.table-striped tbody tr:hover {
+    background-color: #f1f1f1; /* Fondo al pasar el ratón */
+}
+
+
+.modal {
+    display: block; /* Asegura que se muestre */
+    position: fixed;
+    top: 50%; /* Centra verticalmente */
+    left: 50%; /* Centra horizontalmente */
+    transform: translate(-50%, -50%); /* Ajusta la posición */
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* Coloca el modal encima de otros elementos */
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+    z-index: 999; /* Debe estar detrás del modal */
+}
