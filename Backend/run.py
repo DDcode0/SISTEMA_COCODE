@@ -13,7 +13,7 @@ if __name__ == "__main__": # Verificamos que este archivo es el que se está eje
 """
 
 from app import create_app
-from app.routes import personas_bp  # Importar el Blueprint
+
 
 app = create_app()
 

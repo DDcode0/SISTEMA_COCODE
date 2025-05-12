@@ -1,1079 +1,500 @@
-# creando cruds para las tablas de la base de datos
 
+# app/routes.py
+# Todas las rutas unificadas en un solo archivo
+# Prefijo común: /api
 
-
-#inportar la base de datos y el modelo de la tabla persona
-
-# Importamos la instancia de la base de datos
-
-import logging
 from flask import Blueprint, request, jsonify
 from app.extensions import db
-from app.models import Persona, Derecho, Cuota, Pago, Ingreso, Egreso, PersonaDerecho
+from app.models import (
+    Persona, Derecho, PersonaDerecho,
+    Cuota, DerechoCuota, PersonaCuota,
+    Pago, Ingreso, Egreso
+)
+
+
 from app.utils.validaciones import (
-    validar_persona, validar_derecho, validar_cuota, validar_pago, validar_ingreso, 
-    validar_egreso, validar_persona_derecho)
+    validar_persona,
+    validar_derecho,
+    validar_cuota,
+    validar_persona_derecho,
+    validar_pago,
+    validar_ingreso,
+    validar_egreso
+)
 
 
+api = Blueprint('api', __name__, url_prefix='/api')
 
-
-
-# Crear un Blueprint para las rutas relacionadas con personas
-personas_bp = Blueprint('personas', __name__)
-
-# Ruta para crear una persona
-@personas_bp.route('/personas', methods=['POST'])
-def crear_persona():
-    
-    datos = request.get_json()
-    
-    errores = validar_persona(datos)
-    if errores:
-        logging.error(f"Error al crear persona: {errores}")  # Log de error
-
-        return jsonify({'errores': errores}), 400
-
-    nueva_persona = Persona(
-        DPI=datos.get('DPI'),
-        Nombre=datos.get('Nombre'),
-        Direccion=datos.get('Direccion'),
-        Telefono=datos.get('Telefono'),
-        Email=datos.get('Email'),
-        Rol=datos.get('Rol'),
-        Estado=datos.get('Estado', True)
-    )
-    db.session.add(nueva_persona)
-    db.session.commit()
-    
-    ## Log de éxito
-    logging.info(f"Persona creada exitosamente: DPI={datos['DPI']}")  # Log de éxito
-    
-    mensaje = f"La persona {datos['Nombre']} ha sido registrada exitosamente con el rol '{datos['Rol']}'."
-    
-    return jsonify({
-        'mensaje': mensaje,
-        'persona': {
-            'ID_Persona': nueva_persona.ID_Persona,
-            'Nombre': nueva_persona.Nombre,
-            'Rol': nueva_persona.Rol
-        }
-    }), 201
-
-
-# Ruta para obtener todas las personas
-@personas_bp.route('/personas', methods=['GET'])
-def obtener_personas():
+# --------------------- Personas ---------------------
+@api.route('/personas', methods=['GET'])
+def get_personas():
     personas = Persona.query.all()
-    resultado = [
-        {
-            'ID_Persona': persona.ID_Persona,
-            'DPI': persona.DPI,
-            'Nombre': persona.Nombre,
-            'Direccion': persona.Direccion,
-            'Telefono': persona.Telefono,
-            'Email': persona.Email,
-            'Rol': persona.Rol,
-            'Estado': persona.Estado
-        }
-        for persona in personas
-    ]
-    return jsonify(resultado), 200
+    return jsonify([{
+        'ID_Persona': p.id_persona,
+        'DPI': p.dpi,
+        'Nombre': p.nombre,
+        'Direccion': p.direccion,
+        'Telefono': p.telefono,
+        'Email': p.email,
+        'Rol': p.rol,
+        'Estado': p.estado
+    } for p in personas]), 200
 
-# Ruta para obtener una persona específica
-@personas_bp.route('/personas/<int:id_persona>', methods=['GET'])
-def obtener_persona(id_persona):
-    persona = Persona.query.get_or_404(id_persona)
+@api.route('/personas/<int:id>', methods=['GET'])
+def get_persona(id):
+    p = Persona.query.get_or_404(id)
     return jsonify({
-        'ID_Persona': persona.ID_Persona,
-        'DPI': persona.DPI,
-        'Nombre': persona.Nombre,
-        'Direccion': persona.Direccion,
-        'Telefono': persona.Telefono,
-        'Email': persona.Email,
-        'Rol': persona.Rol,
-        'Estado': persona.Estado
+        'ID_Persona': p.id_persona,
+        'DPI': p.dpi,
+        'Nombre': p.nombre,
+        'Direccion': p.direccion,
+        'Telefono': p.telefono,
+        'Email': p.email,
+        'Rol': p.rol,
+        'Estado': p.estado
     }), 200
 
-# Ruta para actualizar una persona
-@personas_bp.route('/personas/<int:id_persona>', methods=['PUT'])
-def actualizar_persona(id_persona):
-    persona = Persona.query.get_or_404(id_persona)
+@api.route('/personas', methods=['POST'])
+def post_persona():
     datos = request.get_json()
-    persona.DPI = datos.get('DPI', persona.DPI)
-    persona.Nombre = datos.get('Nombre', persona.Nombre)
-    persona.Direccion = datos.get('Direccion', persona.Direccion)
-    persona.Telefono = datos.get('Telefono', persona.Telefono)
-    persona.Email = datos.get('Email', persona.Email)
-    persona.Rol = datos.get('Rol', persona.Rol)
-    persona.Estado = datos.get('Estado', persona.Estado)
-    db.session.commit()
-    return jsonify({'mensaje': 'Persona actualizada exitosamente'}), 200
+    datos.setdefault('Estado', 'Activo')
+    datos.setdefault('Rol', 'Sin rol')
 
-# Ruta para eliminar una persona
-@personas_bp.route('/personas/<int:id_persona>', methods=['DELETE'])
-def eliminar_persona(id_persona):
-    persona = Persona.query.get_or_404(id_persona)
-    db.session.delete(persona)
-    db.session.commit()
-    return jsonify({'mensaje': 'Persona eliminada exitosamente'}), 200
-
-
-#==========================================================================================================
-#rutas para la tabla derechos
-
-
-# Crear un Blueprint para las rutas de derechos
-derechos_bp = Blueprint('derechos', __name__)
-
-# Ruta para crear un derecho
-@derechos_bp.route('/derechos', methods=['POST'])
-def crear_derecho():
-    datos = request.get_json()
-    
-    # Validar los datos de entrada
-    errores = validar_derecho(datos)
-    
+    errores = validar_persona({
+        'DPI': datos.get('DPI'),
+        'Nombre': datos.get('Nombre'),
+        'Email': datos.get('Email'),
+        'Telefono': datos.get('Telefono'),
+        'Direccion': datos.get('Direccion'),
+        'Rol': datos.get('Rol'),
+        'Estado': datos.get('Estado')
+    })
     if errores:
-        logging.error(f"Error al crear derecho: {errores}")  # Log de error
-
         return jsonify({'errores': errores}), 400
 
-    nuevo_derecho = Derecho(Nombre=datos.get('Nombre'))
-    db.session.add(nuevo_derecho)
+    p = Persona(
+        dpi=datos['DPI'], nombre=datos['Nombre'], email=datos.get('Email'),
+        telefono=datos.get('Telefono'), direccion=datos.get('Direccion'),
+        rol=datos.get('Rol'), estado=datos.get('Estado')
+    )
+    db.session.add(p)
     db.session.commit()
-    logging.info(f"Derecho creado exitosamente: Nombre={datos['Nombre']}")  # Log de éxito
+    return jsonify({'mensaje': 'Persona creada', 'ID_Persona': p.id_persona}), 201
 
-    return jsonify({'mensaje': 'Derecho creado exitosamente', 'derecho': {'ID_Derecho': nuevo_derecho.ID_Derecho, 'Nombre': nuevo_derecho.Nombre}}), 201
 
-# Ruta para obtener todos los derechos
-@derechos_bp.route('/derechos', methods=['GET'])
-def obtener_derechos():
-    derechos = Derecho.query.all()
-    resultado = [{'ID_Derecho': derecho.ID_Derecho, 'Nombre': derecho.Nombre} for derecho in derechos]
-    return jsonify(resultado), 200
 
-# Ruta para obtener un derecho específico
-@derechos_bp.route('/derechos/<int:id_derecho>', methods=['GET'])
-def obtener_derecho(id_derecho):
-    derecho = db.session.get(Derecho, id_derecho)
-    if derecho:
-        return jsonify({'ID_Derecho': derecho.ID_Derecho, 'Nombre': derecho.Nombre}), 200
-    else:
-        return jsonify({'mensaje': 'Derecho no encontrado'}), 404
-
-# Ruta para actualizar un derecho
-@derechos_bp.route('/derechos/<int:id_derecho>', methods=['PUT'])
-def actualizar_derecho(id_derecho):
-    derecho = db.session.get(Derecho, id_derecho)
-    if not derecho:
-        return jsonify({'mensaje': 'Derecho no encontrado'}), 404
-
+@api.route('/personas/<int:id>', methods=['PUT'])
+def put_persona(id):
     datos = request.get_json()
-    derecho.Nombre = datos.get('Nombre', derecho.Nombre)
-    db.session.commit()
-    return jsonify({'mensaje': 'Derecho actualizado exitosamente'}), 200
+    # Añadir el ID al payload para validaciones de duplicado
+    datos['ID_Persona'] = id
 
-# Ruta para eliminar un derecho
-@derechos_bp.route('/derechos/<int:id_derecho>', methods=['DELETE'])
-def eliminar_derecho(id_derecho):
-    derecho = db.session.get(Derecho, id_derecho)
-    if not derecho:
-        return jsonify({'mensaje': 'Derecho no encontrado'}), 404
+    # Llamar al validador en modo actualización
+    errores = validar_persona({
+        'DPI': datos.get('DPI'),
+        'Nombre': datos.get('Nombre'),
+        'Email': datos.get('Email'),
+        'Telefono': datos.get('Telefono'),
+        'Direccion': datos.get('Direccion'),
+        'Rol': datos.get('Rol'),
+        'Estado': datos.get('Estado'),
+        'ID_Persona': id
+    }, actualizacion=True)
 
-    db.session.delete(derecho)
-    db.session.commit()
-    return jsonify({'mensaje': 'Derecho eliminado exitosamente'}), 200
-
-
-
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-# Crear un Blueprint para las rutas de cuotas
-cuotas_bp = Blueprint('cuotas', __name__)
-
-# Ruta para crear una cuota
-@cuotas_bp.route('/cuotas', methods=['POST'])
-def crear_cuota():
-    datos = request.get_json()
-    
-    # Validar los datos de entrada
-    errores = validar_cuota(datos)
     if errores:
-        logging.error(f"Error al crear cuota: {errores}")  # Log de error
-
         return jsonify({'errores': errores}), 400
 
-    
-    nueva_cuota = Cuota(
-        Descripcion=datos.get('Descripcion'),
-        Monto=datos.get('Monto'),
-        Fecha_Limite=datos.get('Fecha_Limite')
-    )
-    db.session.add(nueva_cuota)
+    p = Persona.query.get_or_404(id)
+    # Solo sobrescribimos los campos que vienen en datos
+    for key, attr in [
+        ('DPI','dpi'),('Nombre','nombre'),
+        ('Email','email'),('Telefono','telefono'),
+        ('Direccion','direccion'),('Rol','rol'),
+        ('Estado','estado')
+    ]:
+        if key in datos and datos[key] is not None:
+            setattr(p, attr, datos[key])
     db.session.commit()
-    
-    
-    logging.info(f"Cuota creada exitosamente: Descripcion={datos['Descripcion']}") # Log de éxito
-    return jsonify({'mensaje': 'Cuota creada exitosamente', 'cuota': {'ID_Cuota': nueva_cuota.ID_Cuota, 'Descripcion': nueva_cuota.Descripcion}}), 201
+    return jsonify({'mensaje': 'Persona actualizada'}), 200
 
-# Ruta para obtener todas las cuotas
-@cuotas_bp.route('/cuotas', methods=['GET'])
-def obtener_cuotas():
-    cuotas = Cuota.query.all()
-    resultado = [{'ID_Cuota': cuota.ID_Cuota, 'Descripcion': cuota.Descripcion, 'Monto': str(cuota.Monto), 'Fecha_Limite': str(cuota.Fecha_Limite)} for cuota in cuotas]
-    return jsonify(resultado), 200
 
-# Ruta para obtener una cuota específica
-@cuotas_bp.route('/cuotas/<int:id_cuota>', methods=['GET'])
-def obtener_cuota(id_cuota):
-    cuota = db.session.get(Cuota, id_cuota)
-    if cuota:
-        return jsonify({'ID_Cuota': cuota.ID_Cuota, 'Descripcion': cuota.Descripcion, 'Monto': str(cuota.Monto), 'Fecha_Limite': str(cuota.Fecha_Limite)}), 200
-    else:
-        return jsonify({'mensaje': 'Cuota no encontrada'}), 404
 
-# Ruta para actualizar una cuota
-@cuotas_bp.route('/cuotas/<int:id_cuota>', methods=['PUT'])
-def actualizar_cuota(id_cuota):
-    cuota = db.session.get(Cuota, id_cuota)
-    if not cuota:
-        return jsonify({'mensaje': 'Cuota no encontrada'}), 404
 
+
+@api.route('/personas/<int:id>', methods=['DELETE'])
+def delete_persona(id):
+    """
+    En lugar de borrar la persona, cambia su estado a 'Inactivo'.
+    """
+    p = Persona.query.get_or_404(id)
+    p.estado = 'Inactivo'
+    db.session.commit()
+    return jsonify({'mensaje': 'Persona marcada como inactiva'}), 200
+
+
+# --------------------- Derechos ---------------------
+@api.route('/derechos', methods=['GET'])
+def get_derechos():
+    lista = Derecho.query.all()
+    return jsonify([{'ID_Derecho': d.id_derecho, 'Nombre': d.nombre} for d in lista]), 200
+
+@api.route('/derechos/<int:id>', methods=['GET'])
+def get_derecho(id):
+    d = Derecho.query.get_or_404(id)
+    return jsonify({'ID_Derecho': d.id_derecho, 'Nombre': d.nombre}), 200
+
+@api.route('/derechos', methods=['POST'])
+def post_derecho():
     datos = request.get_json()
-    cuota.Descripcion = datos.get('Descripcion', cuota.Descripcion)
-    cuota.Monto = datos.get('Monto', cuota.Monto)
-    cuota.Fecha_Limite = datos.get('Fecha_Limite', cuota.Fecha_Limite)
-    db.session.commit()
-    return jsonify({'mensaje': 'Cuota actualizada exitosamente'}), 200
-
-# Ruta para eliminar una cuota
-@cuotas_bp.route('/cuotas/<int:id_cuota>', methods=['DELETE'])
-def eliminar_cuota(id_cuota):
-    cuota = db.session.get(Cuota, id_cuota)
-    if not cuota:
-        return jsonify({'mensaje': 'Cuota no encontrada'}), 404
-
-    db.session.delete(cuota)
-    db.session.commit()
-    return jsonify({'mensaje': 'Cuota eliminada exitosamente'}), 200
-
-
-#_____________________________________________________________________________
-
-# Crear un Blueprint para las rutas de pagos
-pagos_bp = Blueprint('pagos', __name__)
-
-# Ruta para crear un pago
-@pagos_bp.route('/pagos', methods=['POST'])
-def crear_pago():
-    datos = request.get_json()
-    errores = validar_pago(datos)
+    errores = validar_derecho({'Nombre': datos.get('Nombre')})
     if errores:
-        logging.error(f"Error al registrar pago: {errores}")  # Log de error
-
         return jsonify({'errores': errores}), 400
-
-    cuota = Cuota.query.get(datos['ID_Cuota'])
-    persona = Persona.query.get(datos['ID_Persona'])  # Recuperar la persona para observaciones
-
-    if not cuota:
-        return jsonify({'error': 'Cuota no encontrada.'}), 404
-    
-    if not persona:
-        return jsonify({'error': 'Persona no encontrada.'}), 404
-
-
-    # Calcular pagos realizados para la persona y cuota específica
-    pagos_previos = db.session.query(db.func.sum(Pago.Monto_Pagado)).filter(
-        Pago.ID_Cuota == datos['ID_Cuota'], Pago.ID_Persona == datos['ID_Persona']
-    ).scalar() or 0
-
-    pagos_totales = pagos_previos + datos['Monto_Pagado']
-    if pagos_totales > cuota.Monto:
-        return jsonify({'error': f'El monto total no puede exceder el monto restante de la cuota: Q{cuota.Monto - pagos_previos}.'}), 400
-
-    # Verificar si existe un registro previo
-    pago_existente = Pago.query.filter_by(ID_Persona=datos['ID_Persona'], ID_Cuota=datos['ID_Cuota']).first()
-
-
-    # Si detectamos un pago previo, verificamos su contexto
-    
-    if pago_existente:
-        # Calcular la diferencia en el monto pagado
-        diferencia_monto = datos['Monto_Pagado'] - pago_existente.Monto_Pagado
-
-
-        # Actualizar el pago existente
-        pago_existente.Monto_Pagado += datos['Monto_Pagado']
-        pago_existente.Fecha_Pago = datos['Fecha_Pago']
-        pago_existente.Estado = 'Completado' if pagos_totales >= cuota.Monto else 'Pendiente'
-        db.session.commit()
-        
-        # Registrar el ingreso correspondiente al nuevo pago
-        nuevo_ingreso = Ingreso(
-            Fecha=datos['Fecha_Pago'],
-            Monto=datos['Monto_Pagado'] ,
-            Fuente=f'Tipo de Cuota: {cuota.Descripcion}',
-            Observaciones=f'Pago realizado por {persona.Nombre}. Estado de la cuota: {pago_existente.Estado}.'
-        
-        )
-        db.session.add(nuevo_ingreso)
-        db.session.commit()
-
-        
-        
-        logging.info(f"Pago actualizado exitosamente: Persona={datos['ID_Persona']}, Cuota={datos['ID_Cuota']}, Estado={pago_existente.Estado}")
-        return jsonify({'mensaje': 'Pago actualizado exitosamente', 'estado': pago_existente.Estado, 'monto_restante': cuota.Monto - pagos_totales}), 200
-
-    # Registrar un nuevo pago
-    nuevo_pago = Pago(
-        ID_Persona=datos['ID_Persona'],
-        ID_Cuota=datos['ID_Cuota'],
-        Fecha_Pago=datos['Fecha_Pago'],
-        Monto_Pagado=datos['Monto_Pagado'],
-        Estado='Completado' if pagos_totales >= cuota.Monto else 'Pendiente'
-    )
-    db.session.add(nuevo_pago)
-    # Registrar el ingreso correspondiente al nuevo pago
-    nuevo_ingreso = Ingreso(
-        Fecha=datos['Fecha_Pago'],
-        Monto=datos['Monto_Pagado'],
-        Fuente=f'Tipo de Cuota: {cuota.Descripcion}',
-        Observaciones=f'Pago registrado por {persona.Nombre}. Estado de la cuota: {nuevo_pago.Estado}.'
-    
-    )
-    db.session.add(nuevo_ingreso)
-
+    d = Derecho(nombre=datos['Nombre'])
+    db.session.add(d)
     db.session.commit()
-    logging.info(f"Pago registrado exitosamente: Persona={datos['ID_Persona']}, Cuota={datos['ID_Cuota']}")
-    return jsonify({'mensaje': 'Pago registrado exitosamente', 'estado': nuevo_pago.Estado, 'monto_restante': cuota.Monto - pagos_totales}), 201
+    return jsonify({'mensaje':'Derecho creado','ID_Derecho': d.id_derecho}),201
 
-# Ruta para obtener todos los pagos
-@pagos_bp.route('/pagos', methods=['GET'])
-def obtener_pagos():
-    pagos = Pago.query.all()
-    resultado = [
-        {
-            'ID_Pago': pago.ID_Pago,
-            'ID_Persona': pago.ID_Persona,
-            'ID_Cuota': pago.ID_Cuota,
-            'Fecha_Pago': str(pago.Fecha_Pago),
-            'Monto_Pagado': str(pago.Monto_Pagado),
-            'Estado': pago.Estado
-        }
-        for pago in pagos
-    ]
-    return jsonify(resultado), 200
-
-# Ruta para obtener un pago específico
-@pagos_bp.route('/pagos/<int:id_pago>', methods=['GET'])
-def obtener_pago(id_pago):
-    pago = db.session.get(Pago, id_pago)
-    if pago:
-        return jsonify({
-            'ID_Pago': pago.ID_Pago,
-            'ID_Persona': pago.ID_Persona,
-            'ID_Cuota': pago.ID_Cuota,
-            'Fecha_Pago': str(pago.Fecha_Pago),
-            'Monto_Pagado': str(pago.Monto_Pagado),
-            'Estado': pago.Estado
-        }), 200
-    else:
-        return jsonify({'mensaje': 'Pago no encontrado'}), 404
-    
-
-# Ruta para actualizar un pago
-@pagos_bp.route('/pagos/<int:id_pago>', methods=['PUT'])
-def actualizar_pago(id_pago):
-    pago = db.session.get(Pago, id_pago)
-    if not pago:
-        return jsonify({'mensaje': 'Pago no encontrado'}), 404
-
-    datos = request.get_json()
-    pago.ID_Persona = datos.get('ID_Persona', pago.ID_Persona)
-    pago.ID_Cuota = datos.get('ID_Cuota', pago.ID_Cuota)
-    pago.Fecha_Pago = datos.get('Fecha_Pago', pago.Fecha_Pago)
-    pago.Monto_Pagado = datos.get('Monto_Pagado', pago.Monto_Pagado)
-    pago.Estado = datos.get('Estado', pago.Estado)
+@api.route('/derechos/<int:id>', methods=['PUT'])
+def put_derecho(id):
+    obj = Derecho.query.get_or_404(id)
+    d = request.get_json()
+    if 'Nombre' in d: obj.nombre = d['Nombre']
     db.session.commit()
-    return jsonify({'mensaje': 'Pago actualizado exitosamente'}), 200
+    return jsonify({'mensaje': 'Derecho actualizado'}), 200
 
-# Ruta para eliminar un pago
-@pagos_bp.route('/pagos/<int:id_pago>', methods=['DELETE'])
-def eliminar_pago(id_pago):
-    pago = db.session.get(Pago, id_pago)
-    if not pago:
-        return jsonify({'mensaje': 'Pago no encontrado'}), 404
-
-    db.session.delete(pago)
+@api.route('/derechos/<int:id>', methods=['DELETE'])
+def delete_derecho(id):
+    obj = Derecho.query.get_or_404(id)
+    db.session.delete(obj)
     db.session.commit()
-    return jsonify({'mensaje': 'Pago eliminado exitosamente'}), 200
+    return jsonify({'mensaje': 'Derecho eliminado'}), 200
 
+# --------------------- Cuotas ---------------------
+@api.route('/cuotas', methods=['GET'])
+def get_cuotas():
+    lista = Cuota.query.all()
+    return jsonify([{
+        'ID_Cuota': c.id_cuota,
+        'Descripcion': c.descripcion,
+        'Monto': float(c.monto),
+        'Fecha_Limite': str(c.fecha_limite)
+    } for c in lista]), 200
 
-@pagos_bp.route('/pagos/cuota/<int:id_cuota>', methods=['GET'])
-def obtener_estado_cuota(id_cuota):
-    # Validar que el parámetro ID_Persona esté presente
-    id_persona = request.args.get('ID_Persona')
-    if not id_persona:
-        return jsonify({'error': 'ID_Persona es obligatorio para consultar el estado de la cuota.'}), 400
-
-    cuota = Cuota.query.get(id_cuota)
-    if not cuota:
-        return jsonify({'error': 'Cuota no encontrada'}), 404
-
-    # Calcular los pagos realizados para esta cuota y persona específica
-    pagos_totales = db.session.query(db.func.sum(Pago.Monto_Pagado)).filter(
-        Pago.ID_Cuota == id_cuota, Pago.ID_Persona == id_persona
-    ).scalar() or 0
-
-    # Calcular el monto restante
-    monto_restante = cuota.Monto - pagos_totales
-
+@api.route('/cuotas/<int:id>', methods=['GET'])
+def get_cuota(id):
+    c = Cuota.query.get_or_404(id)
     return jsonify({
-        'ID_Cuota': cuota.ID_Cuota,
-        'Descripcion': cuota.Descripcion,
-        'Monto': cuota.Monto,
-        'PagosRealizados': pagos_totales,
-        'MontoRestante': monto_restante,
-        'Estado': 'Completado' if pagos_totales >= cuota.Monto else 'Pendiente'
+        'ID_Cuota': c.id_cuota,
+        'Descripcion': c.descripcion,
+        'Monto': float(c.monto),
+        'Fecha_Limite': str(c.fecha_limite)
     }), 200
 
-#--____________________________________________________________________________________
-#--____________________________________________________________________________________
-
-# Crear un Blueprint para las rutas de ingresos
-ingresos_bp = Blueprint('ingresos', __name__)
-
-# Ruta para crear un ingreso
-@ingresos_bp.route('/ingresos', methods=['POST'])
-def crear_ingreso():
+@api.route('/cuotas', methods=['POST'])
+def post_cuota():
     datos = request.get_json()
-    errores = validar_ingreso(datos)
+    errores = validar_cuota({
+        'Descripcion': datos.get('Descripcion'),
+        'Monto': datos.get('Monto'),
+        'Fecha_Limite': datos.get('Fecha_Limite')
+    })
     if errores:
-        logging.error(f"Error al registrar ingreso: {errores}")  # Log de error
-
         return jsonify({'errores': errores}), 400
-
-    nuevo_ingreso = Ingreso(
-        Fecha=datos.get('Fecha'),
-        Monto=datos.get('Monto'),
-        Fuente=datos.get('Fuente'),
-        Observaciones=datos.get('Observaciones')
-    )
-    db.session.add(nuevo_ingreso)
+    c = Cuota(descripcion=datos['Descripcion'], monto=datos['Monto'], fecha_limite=datos['Fecha_Limite'])
+    db.session.add(c)
     db.session.commit()
-    logging.info(f"Ingreso registrado exitosamente: Fuente={datos['Fuente']}, Monto={datos['Monto']}")
-    return jsonify({'mensaje': 'Ingreso creado exitosamente', 'ingreso': {'ID_Ingreso': nuevo_ingreso.ID_Ingreso, 'Monto': str(nuevo_ingreso.Monto)}}), 201
+    return jsonify({'mensaje':'Cuota creada','ID_Cuota': c.id_cuota}),201
 
-# Ruta para obtener todos los ingresos
-@ingresos_bp.route('/ingresos', methods=['GET'])
-def obtener_ingresos():
-    ingresos = Ingreso.query.all()
-    resultado = [
-        {
-            'ID_Ingreso': ingreso.ID_Ingreso,
-            'Fecha': str(ingreso.Fecha),
-            'Monto': str(ingreso.Monto),
-            'Fuente': ingreso.Fuente,
-            'Observaciones': ingreso.Observaciones
-        }
-        for ingreso in ingresos
-    ]
-    return jsonify(resultado), 200
-
-# Ruta para obtener un ingreso específico
-@ingresos_bp.route('/ingresos/<int:id_ingreso>', methods=['GET'])
-def obtener_ingreso(id_ingreso):
-    ingreso = db.session.get(Ingreso, id_ingreso)
-    if ingreso:
-        return jsonify({
-            'ID_Ingreso': ingreso.ID_Ingreso,
-            'Fecha': str(ingreso.Fecha),
-            'Monto': str(ingreso.Monto),
-            'Fuente': ingreso.Fuente,
-            'Observaciones': ingreso.Observaciones
-        }), 200
-    else:
-        return jsonify({'mensaje': 'Ingreso no encontrado'}), 404
-
-@ingresos_bp.route('/ingresos/total', methods=['GET'])
-def obtener_total_ingresos():
-    total = db.session.query(db.func.sum(Ingreso.Monto)).scalar() or 0
-    return jsonify({'total_ingresos': float(total)}), 200
-
-
-# Ruta para actualizar un ingreso
-@ingresos_bp.route('/ingresos/<int:id_ingreso>', methods=['PUT'])
-def actualizar_ingreso(id_ingreso):
-    ingreso = db.session.get(Ingreso, id_ingreso)
-    if not ingreso:
-        return jsonify({'mensaje': 'Ingreso no encontrado'}), 404
-
+@api.route('/cuotas/<int:id>', methods=['PUT'])
+def put_cuota(id):
     datos = request.get_json()
-    ingreso.Fecha = datos.get('Fecha', ingreso.Fecha)
-    ingreso.Monto = datos.get('Monto', ingreso.Monto)
-    ingreso.Fuente = datos.get('Fuente', ingreso.Fuente)
-    ingreso.Observaciones = datos.get('Observaciones', ingreso.Observaciones)
-    db.session.commit()
-    return jsonify({'mensaje': 'Ingreso actualizado exitosamente'}), 200
-
-# Ruta para eliminar un ingreso
-@ingresos_bp.route('/ingresos/<int:id_ingreso>', methods=['DELETE'])
-def eliminar_ingreso(id_ingreso):
-    ingreso = db.session.get(Ingreso, id_ingreso)
-    if not ingreso:
-        return jsonify({'mensaje': 'Ingreso no encontrado'}), 404
-
-    db.session.delete(ingreso)
-    db.session.commit()
-    return jsonify({'mensaje': 'Ingreso eliminado exitosamente'}), 200
-
-
-
-#--____________________________________________________________________________________
-#--____________________________________________________________________________________
-
-
-# Crear un Blueprint para las rutas de egresos
-egresos_bp = Blueprint('egresos', __name__)
-
-# Ruta para crear un egreso
-@egresos_bp.route('/egresos', methods=['POST'])
-def crear_egreso():
-    datos = request.get_json()
-    errores = validar_egreso(datos)
+    errores = validar_cuota({
+        'Descripcion': datos.get('Descripcion'),
+        'Monto': datos.get('Monto'),
+        'Fecha_Limite': datos.get('Fecha_Limite')
+    })
     if errores:
-        logging.error(f"Error al registrar egreso: {errores}")
-        return jsonify({'errores': errores}), 400
-
-    try:
-        # Obtener los fondos disponibles desde la lógica interna
-        total_ingresos = db.session.query(db.func.sum(Ingreso.Monto)).scalar() or 0
-        total_egresos = db.session.query(db.func.sum(Egreso.Monto)).scalar() or 0
-        fondos_disponibles = total_ingresos - total_egresos
-
-        # Validar fondos suficientes
-        if datos['Monto'] > fondos_disponibles:
-            mensaje_error = f"Fondos insuficientes. Disponible: Q{fondos_disponibles:.2f}. Egreso solicitado: Q{datos['Monto']:.2f}."
-            logging.error(mensaje_error)
-            return jsonify({'errores': [mensaje_error]}), 400
-
-        # Registrar el nuevo egreso
-        nuevo_egreso = Egreso(
-            Fecha=datos.get('Fecha'),
-            Monto=datos.get('Monto'),
-            Descripcion=datos.get('Descripcion')
-        )
-        db.session.add(nuevo_egreso)
-        db.session.commit()
-        logging.info(f"Egreso registrado exitosamente: Descripcion={datos['Descripcion']}, Monto={datos['Monto']}")
-
-        return jsonify({'mensaje': 'Egreso creado exitosamente', 'egreso': {'ID_Egreso': nuevo_egreso.ID_Egreso, 'Monto': str(nuevo_egreso.Monto)}}), 201
-    except Exception as e:
-        logging.error(f"Error interno al registrar egreso: {str(e)}")
-        return jsonify({'error': 'Error interno al registrar egreso.'}), 500
-    
-    
-    
-
-# Ruta para obtener todos los egresos
-@egresos_bp.route('/egresos', methods=['GET'])
-def obtener_egresos():
-    egresos = Egreso.query.all()
-    resultado = [
-        {
-            'ID_Egreso': egreso.ID_Egreso,
-            'Fecha': str(egreso.Fecha),
-            'Monto': str(egreso.Monto),
-            'Descripcion': egreso.Descripcion
-        }
-        for egreso in egresos
-    ]
-    return jsonify(resultado), 200
-
-# Ruta para obtener un egreso específico
-@egresos_bp.route('/egresos/<int:id_egreso>', methods=['GET'])
-def obtener_egreso(id_egreso):
-    egreso = db.session.get(Egreso, id_egreso)
-    if egreso:
-        return jsonify({
-            'ID_Egreso': egreso.ID_Egreso,
-            'Fecha': str(egreso.Fecha),
-            'Monto': str(egreso.Monto),
-            'Descripcion': egreso.Descripcion
-        }), 200
-    else:
-        return jsonify({'mensaje': 'Egreso no encontrado'}), 404
-
-# Ruta para actualizar un egreso
-@egresos_bp.route('/egresos/<int:id_egreso>', methods=['PUT'])
-def actualizar_egreso(id_egreso):
-    egreso = db.session.get(Egreso, id_egreso)
-    if not egreso:
-        return jsonify({'mensaje': 'Egreso no encontrado'}), 404
-
-    datos = request.get_json()
-    egreso.Fecha = datos.get('Fecha', egreso.Fecha)
-    egreso.Monto = datos.get('Monto', egreso.Monto)
-    egreso.Descripcion = datos.get('Descripcion', egreso.Descripcion)
+        return jsonify({'errores': errores}),400
+    c = Cuota.query.get_or_404(id)
+    for key, attr in [('Descripcion','descripcion'),('Monto','monto'),('Fecha_Limite','fecha_limite')]:
+        if datos.get(key) is not None:
+            setattr(c, attr, datos[key])
     db.session.commit()
-    return jsonify({'mensaje': 'Egreso actualizado exitosamente'}), 200
+    return jsonify({'mensaje':'Cuota actualizada'}),200
 
-# Ruta para eliminar un egreso
-@egresos_bp.route('/egresos/<int:id_egreso>', methods=['DELETE'])
-def eliminar_egreso(id_egreso):
-    egreso = db.session.get(Egreso, id_egreso)
-    if not egreso:
-        return jsonify({'mensaje': 'Egreso no encontrado'}), 404
-
-    db.session.delete(egreso)
+@api.route('/cuotas/<int:id>', methods=['DELETE'])
+def delete_cuota(id):
+    c = Cuota.query.get_or_404(id)
+    db.session.delete(c)
     db.session.commit()
-    return jsonify({'mensaje': 'Egreso eliminado exitosamente'}), 200
+    return jsonify({'mensaje': 'Cuota eliminada'}), 200
 
-@egresos_bp.route('/fondos/disponibles', methods=['GET'])
-def obtener_fondos_disponibles():
-    try:
-        # Total de ingresos
-        total_ingresos = db.session.query(db.func.sum(Ingreso.Monto)).scalar() or 0
-        # Total de egresos
-        total_egresos = db.session.query(db.func.sum(Egreso.Monto)).scalar() or 0
-        # Fondos disponibles
-        fondos_disponibles = total_ingresos - total_egresos
-        return jsonify({'fondos_disponibles': float(fondos_disponibles)}), 200  # Convertir explícitamente a float
-    except Exception as e:
-        logging.error(f"Error al calcular fondos disponibles: {str(e)}")
-        return jsonify({'error': 'Error al calcular fondos disponibles.'}), 500
-    
-    
-@egresos_bp.route('/egresos/total', methods=['GET'])
-def obtener_total_egresos():
-    try:
-        total_egresos = db.session.query(db.func.sum(Egreso.Monto)).scalar() or 0
-        return jsonify({'total_egresos': float(total_egresos)}), 200
-    except Exception as e:
-        logging.error(f"Error al calcular total de egresos: {str(e)}")
-        return jsonify({'error': 'Error interno al calcular total de egresos.'}), 500
+# Opcionales: /cuotas/estado, /cuotas/con-pagos (igual que antes)
 
-#==========================================================================================================
-#==========================================================================================================
+# --------------------- Asignación Derechos → PersonaCuota ---------------------
+@api.route('/persona_derecho', methods=['GET'])
+def list_persona_derecho():
+    lista = PersonaDerecho.query.all()
+    return jsonify([{
+        'ID_Persona': pd.id_persona,
+        'ID_Derecho': pd.id_derecho,
+        'Fecha_Inicio': str(pd.fecha_inicio),
+        'Fecha_Fin': str(pd.fecha_fin) if pd.fecha_fin else None
+    } for pd in lista]), 200
 
-# Crear un Blueprint para las rutas de Persona_Derecho
-persona_derecho_bp = Blueprint('persona_derecho', __name__)
+@api.route('/persona_derecho/<int:pe>/<int:de>', methods=['GET'])
+def get_persona_derecho(pe, de):
+    pd = PersonaDerecho.query.get_or_404((pe, de))
+    return jsonify({
+        'ID_Persona': pd.id_persona,
+        'ID_Derecho': pd.id_derecho,
+        'Fecha_Inicio': str(pd.fecha_inicio),
+        'Fecha_Fin': str(pd.fecha_fin) if pd.fecha_fin else None
+    }), 200
 
-# Ruta para asignar un derecho a una persona
-@persona_derecho_bp.route('/persona_derecho', methods=['POST'])
-def asignar_derecho():
+@api.route('/persona_derecho', methods=['POST'])
+def post_persona_derecho():
     datos = request.get_json()
     errores = validar_persona_derecho(datos)
     if errores:
-        logging.error(f"Error al asignar derecho: {errores}")  # Log de error
-
         return jsonify({'errores': errores}), 400
 
-    nueva_asignacion = PersonaDerecho(
-        ID_Persona=datos.get('ID_Persona'),
-        ID_Derecho=datos.get('ID_Derecho'),
-        Fecha_Inicio=datos.get('Fecha_Inicio'),
-        Fecha_Fin=datos.get('Fecha_Fin')
+    # 1) Crear la asignación Derecho → Persona
+    asign = PersonaDerecho(
+        id_persona=datos['ID_Persona'],
+        id_derecho=datos['ID_Derecho'],
+        fecha_inicio=datos['Fecha_Inicio'],
+        fecha_fin=datos.get('Fecha_Fin')
     )
-    db.session.add(nueva_asignacion)
+    db.session.add(asign)
+    db.session.flush()  # flush para tener el objeto en sesión
+
+    # 2) Buscar todas las cuotas que corresponden a ese derecho
+    cuotas_asociadas = (
+        db.session.query(DerechoCuota.id_cuota)
+                  .filter_by(id_derecho=datos['ID_Derecho'])
+                  .all()
+    )
+    # cuotas_asociadas es lista de tuplas [(cuota1,), (cuota2,), ...]
+
+    # 3) Por cada cuota, crear una entrada en Persona_Cuota
+    for (id_cuota,) in cuotas_asociadas:
+        persona_cuota = PersonaCuota(
+            id_persona=datos['ID_Persona'],
+            id_cuota=id_cuota,
+            fecha_asig=datos['Fecha_Inicio'],
+            estado='Pendiente'
+        )
+        db.session.add(persona_cuota)
+
+    # 4) Commit final
     db.session.commit()
-    logging.info(f"Derecho asignado exitosamente: ID_Persona={datos['ID_Persona']}, ID_Derecho={datos['ID_Derecho']}")
-    return jsonify({'mensaje': 'Derecho asignado exitosamente', 'asignacion': {
-        'ID_Persona': nueva_asignacion.ID_Persona,
-        'ID_Derecho': nueva_asignacion.ID_Derecho,
-        'Fecha_Inicio': str(nueva_asignacion.Fecha_Inicio),
-        'Fecha_Fin': str(nueva_asignacion.Fecha_Fin)
-    }}), 201
+    return jsonify({'mensaje':'Asignación creada y cuotas generadas'}), 201
 
-# Ruta para obtener todas las asignaciones de derechos
-@persona_derecho_bp.route('/persona_derecho', methods=['GET'])
-def obtener_asignaciones():
-    asignaciones = PersonaDerecho.query.all()
-    resultado = [
-        {
-            'ID_Persona': asignacion.ID_Persona,
-            'ID_Derecho': asignacion.ID_Derecho,
-            'Fecha_Inicio': str(asignacion.Fecha_Inicio),
-            'Fecha_Fin': str(asignacion.Fecha_Fin)
-        }
-        for asignacion in asignaciones
-    ]
-    return jsonify(resultado), 200
+@api.route('/persona_derecho/<int:pe>/<int:de>', methods=['PUT'])
+def put_persona_derecho(pe, de):
+    pd = PersonaDerecho.query.get_or_404((pe, de))
+    d = request.get_json()
+    if 'Fecha_Inicio' in d: pd.fecha_inicio = d['Fecha_Inicio']
+    if 'Fecha_Fin' in d: pd.fecha_fin = d['Fecha_Fin']
+    db.session.commit()
+    return jsonify({'mensaje': 'Asignación actualizada'}), 200
 
-# Ruta para obtener una asignación específica
-@persona_derecho_bp.route('/persona_derecho/<int:id_persona>/<int:id_derecho>', methods=['GET'])
-def obtener_asignacion(id_persona, id_derecho):
-    asignacion = PersonaDerecho.query.filter_by(ID_Persona=id_persona, ID_Derecho=id_derecho).first()
-    if asignacion:
-        return jsonify({
-            'ID_Persona': asignacion.ID_Persona,
-            'ID_Derecho': asignacion.ID_Derecho,
-            'Fecha_Inicio': str(asignacion.Fecha_Inicio),
-            'Fecha_Fin': str(asignacion.Fecha_Fin)
-        }), 200
-    else:
-        return jsonify({'mensaje': 'Asignación no encontrada'}), 404
+@api.route('/persona_derecho/<int:pe>/<int:de>', methods=['DELETE'])
+def delete_persona_derecho(pe, de):
+    pd = PersonaDerecho.query.get_or_404((pe, de))
+    db.session.delete(pd)
+    db.session.commit()
+    return jsonify({'mensaje': 'Asignación eliminada'}), 200
 
-# Ruta para actualizar una asignación
-@persona_derecho_bp.route('/persona_derecho/<int:id_persona>/<int:id_derecho>', methods=['PUT'])
-def actualizar_asignacion(id_persona, id_derecho):
-    asignacion = PersonaDerecho.query.filter_by(ID_Persona=id_persona, ID_Derecho=id_derecho).first()
-    if not asignacion:
-        return jsonify({'mensaje': 'Asignación no encontrada'}), 404
+# --------------------- Pagos ---------------------
+@api.route('/pagos', methods=['GET'])
+def get_pagos():
+    pagos = Pago.query.all()
+    return jsonify([{
+        'ID_Pago': p.id_pago,
+        'ID_Persona': p.id_persona,
+        'ID_Cuota': p.id_cuota,
+        'Fecha_Pago': str(p.fecha_pago),
+        'Monto_Pagado': float(p.monto_pagado),
+        'Estado': p.estado
+    } for p in pagos]), 200
 
+@api.route('/pagos/<int:id>', methods=['GET'])
+def get_pago(id):
+    p = Pago.query.get_or_404(id)
+    return jsonify({
+        'ID_Pago': p.id_pago,
+        'ID_Persona': p.id_persona,
+        'ID_Cuota': p.id_cuota,
+        'Fecha_Pago': str(p.fecha_pago),
+        'Monto_Pagado': float(p.monto_pagado),
+        'Estado': p.estado
+    }), 200
+
+@api.route('/pagos', methods=['POST'])
+def post_pago():
     datos = request.get_json()
-    asignacion.Fecha_Inicio = datos.get('Fecha_Inicio', asignacion.Fecha_Inicio)
-    asignacion.Fecha_Fin = datos.get('Fecha_Fin', asignacion.Fecha_Fin)
+    errores = validar_pago(datos)
+    if errores:
+        return jsonify({'errores': errores}),400
+    pago = Pago.registrar_pago(
+        datos['ID_Persona'], datos['ID_Cuota'], datos['Fecha_Pago'], datos['Monto_Pagado']
+    )
+    return jsonify({'mensaje':'Pago registrado','ID_Pago': pago.id_pago}),201
+
+@api.route('/pagos/<int:id>', methods=['PUT'])
+def put_pago(id):
+    p = Pago.query.get_or_404(id)
+    d = request.get_json()
+    for key, attr in [('ID_Persona','id_persona'),('ID_Cuota','id_cuota'),('Fecha_Pago','fecha_pago'),('Monto_Pagado','monto_pagado'),('Estado','estado')]:
+        if key in d: setattr(p, attr, d[key])
     db.session.commit()
-    return jsonify({'mensaje': 'Asignación actualizada exitosamente'}), 200
+    return jsonify({'mensaje': 'Pago actualizado'}), 200
 
-# Ruta para eliminar una asignación
-@persona_derecho_bp.route('/persona_derecho/<int:id_persona>/<int:id_derecho>', methods=['DELETE'])
-def eliminar_asignacion(id_persona, id_derecho):
-    asignacion = PersonaDerecho.query.filter_by(ID_Persona=id_persona, ID_Derecho=id_derecho).first()
-    if not asignacion:
-        return jsonify({'mensaje': 'Asignación no encontrada'}), 404
-
-    db.session.delete(asignacion)
+@api.route('/pagos/<int:id>', methods=['DELETE'])
+def delete_pago(id):
+    p = Pago.query.get_or_404(id)
+    db.session.delete(p)
     db.session.commit()
-    return jsonify({'mensaje': 'Asignación eliminada exitosamente'}), 200
+    return jsonify({'mensaje': 'Pago eliminado'}), 200
 
-@persona_derecho_bp.route('/persona_derecho/resumen', methods=['GET'])
-def obtener_resumen_personas_derechos():
-    try:
-        resultado = db.session.query(
-            Persona.Nombre,
-            Persona.DPI,
-            Persona.Rol,
-            Derecho.Nombre.label('Nombre_Derecho'),
-            Cuota.Descripcion.label('Descripcion_Cuota'),
-            Cuota.Monto,
-            db.func.sum(Pago.Monto_Pagado).label('PagosRealizados')
-        ).join(PersonaDerecho, Persona.ID_Persona == PersonaDerecho.ID_Persona)\
-         .join(Derecho, PersonaDerecho.ID_Derecho == Derecho.ID_Derecho)\
-         .outerjoin(Cuota, Cuota.ID_Cuota == Pago.ID_Cuota)\
-         .outerjoin(Pago, Cuota.ID_Cuota == Pago.ID_Cuota)\
-         .group_by(Persona.Nombre, Persona.DPI, Persona.Rol, Derecho.Nombre, Cuota.Descripcion, Cuota.Monto).all()
+@api.route('/pagos/cuota/<int:cuota_id>', methods=['GET'])
+def estado_cuota(cuota_id):
+    persona_id = request.args.get('ID_Persona')
+    if not persona_id:
+        return jsonify({'error': 'ID_Persona requerido'}), 400
+    pc = PersonaCuota.query.get((int(persona_id), cuota_id))
+    if not pc:
+        return jsonify({'error': 'Asignación no encontrada'}), 404
+    total_pagado = (db.session.query(db.func.sum(Pago.monto_pagado)).filter(Pago.id_persona == persona_id, Pago.id_cuota == cuota_id).scalar() or 0)
 
-        resumen = [
-            {
-                'Nombre': persona.Nombre,
-                'DPI': persona.DPI,
-                'Rol': persona.Rol,
-                'Nombre_Derecho': derecho.Nombre_Derecho,
-                'Descripcion_Cuota': cuota.Descripcion_Cuota,
-                'Monto': cuota.Monto,
-                'PagosRealizados': cuota.PagosRealizados or 0,
-                'Estado': 'Completado' if cuota.PagosRealizados and cuota.PagosRealizados >= cuota.Monto else 'Pendiente'
-            } for persona, derecho, cuota in resultado
-        ]
-        return jsonify(resumen), 200
-    except Exception as e:
-        logging.error(f"Error al obtener resumen de personas con derechos: {str(e)}")
-     
-    
-@persona_derecho_bp.route('/persona_derecho/detalle', methods=['GET'])
-def obtener_detalle_personas_derechos():
-    try:
-        # Obtener parámetros de búsqueda
-        nombre = request.args.get('Nombre')
-        dpi = request.args.get('DPI')
-        derecho = request.args.get('Derecho')
+    restante = pc.cuota.monto - total_pagado
+    return jsonify({'ID_Cuota':cuota_id, 'PagosRealizados':float(total_pagado), 'MontoRestante':float(restante), 'Estado':pc.estado}), 200
 
-        # Construir la consulta base
-        query = db.session.query(
-            Persona.ID_Persona,
-            Persona.Nombre,
-            Persona.DPI,
-            Persona.Rol,
-            Persona.Telefono,
-            Persona.Email,
-            PersonaDerecho.Fecha_Inicio,
-            PersonaDerecho.Fecha_Fin,
-            Derecho.ID_Derecho,
-            Derecho.Nombre.label('Descripcion_Derecho')
-        ).join(PersonaDerecho, Persona.ID_Persona == PersonaDerecho.ID_Persona)\
-         .join(Derecho, PersonaDerecho.ID_Derecho == Derecho.ID_Derecho)
+# --------------------- Ingresos ---------------------
+@api.route('/ingresos', methods=['GET'])
+def get_ingresos():
+    ingresos = Ingreso.query.all()
+    return jsonify([{
+        'ID_Ingreso': i.id_ingreso,
+        'Fecha': str(i.fecha),
+        'Monto': float(i.monto),
+        'Fuente': i.fuente,
+        'Observaciones': i.observaciones,
+        'ID_Pago': i.id_pago
+    } for i in ingresos]), 200
 
-        # Aplicar filtros según parámetros
-        if nombre:
-            query = query.filter(Persona.Nombre.ilike(f'%{nombre}%'))
-        if dpi:
-            query = query.filter(Persona.DPI == dpi)
-        if derecho:
-            query = query.filter(Derecho.Nombre.ilike(f'%{derecho}%'))
+@api.route('/ingresos/<int:id>', methods=['GET'])
+def get_ingreso(id):
+    i = Ingreso.query.get_or_404(id)
+    return jsonify({
+        'ID_Ingreso': i.id_ingreso,
+        'Fecha': str(i.fecha),
+        'Monto': float(i.monto),
+        'Fuente': i.fuente,
+        'Observaciones': i.observaciones,
+        'ID_Pago': i.id_pago
+    }), 200
 
-        # Ejecutar la consulta
-        resultado = query.all()
+@api.route('/ingresos', methods=['POST'])
+def post_ingreso():
+    datos = request.get_json()
+    errores = validar_ingreso(datos)
+    if errores:
+        return jsonify({'errores': errores}),400
+    ing = Ingreso(
+        fecha=datos['Fecha'], monto=datos['Monto'], fuente=datos.get('Fuente'),
+        observaciones=datos.get('Observaciones'), id_pago=datos.get('ID_Pago')
+    )
+    db.session.add(ing)
+    db.session.commit()
+    return jsonify({'mensaje':'Ingreso creado','ID_Ingreso': ing.id_ingreso}),201
 
-        # Procesar los datos
-        asignaciones = [
-            {
-                'ID_Persona': fila.ID_Persona,
-                'Nombre': fila.Nombre,
-                'DPI': fila.DPI,
-                'Rol': fila.Rol,
-                'Telefono': fila.Telefono,
-                'Email': fila.Email,
-                'ID_Derecho': fila.ID_Derecho,
-                'Descripcion_Derecho': fila.Descripcion_Derecho,
-                'Fecha_Inicio': str(fila.Fecha_Inicio),
-                'Fecha_Fin': str(fila.Fecha_Fin) if fila.Fecha_Fin else 'Sin vencimiento'
-            } for fila in resultado
-        ]
-        return jsonify(asignaciones), 200
-    except Exception as e:
-        logging.error(f"Error al obtener detalle de personas con derechos: {str(e)}")
-        return jsonify({'error': 'Error interno al obtener datos.'}), 500
-    
-@persona_derecho_bp.route('/persona_derecho/sin_derechos', methods=['GET'])
-def obtener_personas_sin_derechos():
-    try:
-        # Consultar personas sin derechos asignados
-        personas_sin_derechos = db.session.query(Persona).outerjoin(
-            PersonaDerecho, Persona.ID_Persona == PersonaDerecho.ID_Persona
-        ).filter(PersonaDerecho.ID_Derecho == None).all()
+@api.route('/ingresos/<int:id>', methods=['PUT'])
+def put_ingreso(id):
+    ing = Ingreso.query.get_or_404(id)
+    d = request.get_json()
+    for key, attr in [('Fecha','fecha'),('Monto','monto'),('Fuente','fuente'),('Observaciones','observaciones')]:
+        if key in d: setattr(ing, attr, d[key])
+    db.session.commit()
+    return jsonify({'mensaje':'Ingreso actualizado'}),200
 
-        resultado = [
-            {
-                'ID_Persona': persona.ID_Persona,
-                'Nombre': persona.Nombre,
-                'DPI': persona.DPI,
-                'Email': persona.Email,
-                'Telefono': persona.Telefono,
-                'Rol': persona.Rol,
-                'Estado': persona.Estado
-            } for persona in personas_sin_derechos
-        ]
-        return jsonify(resultado), 200
-    except Exception as e:
-        logging.error(f"Error al obtener personas sin derechos: {str(e)}")
-        return jsonify({'error': 'Error interno al obtener personas sin derechos.'}), 500 
+@api.route('/ingresos/<int:id>', methods=['DELETE'])
+def delete_ingreso(id):
+    ing = Ingreso.query.get_or_404(id)
+    db.session.delete(ing)
+    db.session.commit()
+    return jsonify({'mensaje':'Ingreso eliminado'}),200
 
-@cuotas_bp.route('/cuotas/estado', methods=['GET'])
-def obtener_cuotas_estado():
-    try:
-        cuotas = db.session.query(
-            Cuota.ID_Cuota,
-            Cuota.Descripcion,
-            Cuota.Monto,
-            db.func.sum(Pago.Monto_Pagado).label('PagosRealizados')
-        ).outerjoin(Pago, Cuota.ID_Cuota == Pago.ID_Cuota).group_by(Cuota.ID_Cuota, Cuota.Descripcion, Cuota.Monto).all()
+@api.route('/ingresos/total', methods=['GET'])
+def total_ingresos():
+    total = db.session.query(db.func.sum(Ingreso.monto)).scalar() or 0
+    return jsonify({'total_ingresos': float(total)}), 200
 
-        resultado = [
-            {
-                'ID_Cuota': cuota.ID_Cuota,
-                'Descripcion': cuota.Descripcion,
-                'Monto': cuota.Monto,
-                'PagosRealizados': cuota.PagosRealizados or 0,
-                'Estado': 'Completado' if cuota.PagosRealizados and cuota.PagosRealizados >= cuota.Monto else 'Pendiente'
-            } for cuota in cuotas
-        ]
-        return jsonify(resultado), 200
-    except Exception as e:
-        logging.error(f"Error al obtener cuotas con estado: {str(e)}")
-        return jsonify({'error': 'Error interno al obtener datos de cuotas.'}), 500
-    
-    
-@persona_derecho_bp.route('/persona_derecho/detalle_combinado', methods=['GET'])
-def obtener_detalle_combinado_personas():
-    try:
-        # Obtener parámetros de búsqueda
-        nombre = request.args.get('Nombre')
-        dpi = request.args.get('DPI')
-        derecho = request.args.get('Derecho')
+# --------------------- Egresos ---------------------
+@api.route('/egresos', methods=['GET'])
+def get_egresos():
+    lista = Egreso.query.all()
+    return jsonify([{
+        'ID_Egreso': e.id_egreso,
+        'Fecha': str(e.fecha),
+        'Monto': float(e.monto),
+        'Descripcion': e.descripcion
+    } for e in lista]),200
 
-        # Personas con derechos asignados
-        query_con_derechos = db.session.query(
-            Persona.ID_Persona,
-            Persona.Nombre,
-            Persona.DPI,
-            Persona.Rol,
-            Persona.Telefono,
-            Persona.Email,
-            PersonaDerecho.Fecha_Inicio,
-            PersonaDerecho.Fecha_Fin,
-            Derecho.ID_Derecho,
-            Derecho.Nombre.label('Descripcion_Derecho')
-        ).join(PersonaDerecho, Persona.ID_Persona == PersonaDerecho.ID_Persona)\
-         .join(Derecho, PersonaDerecho.ID_Derecho == Derecho.ID_Derecho)
+@api.route('/egresos/<int:id>', methods=['GET'])
+def get_egreso(id):
+    e = Egreso.query.get_or_404(id)
+    return jsonify({
+        'ID_Egreso': e.id_egreso,
+        'Fecha': str(e.fecha),
+        'Monto': float(e.monto),
+        'Descripcion': e.descripcion
+    }),200
 
-        # Aplicar filtros a personas con derechos
-        if nombre:
-            query_con_derechos = query_con_derechos.filter(Persona.Nombre.ilike(f'%{nombre}%'))
-        if dpi:
-            query_con_derechos = query_con_derechos.filter(Persona.DPI == dpi)
-        if derecho and derecho.lower() != 'sin derechos':
-            query_con_derechos = query_con_derechos.filter(Derecho.Nombre.ilike(f'%{derecho}%'))
+@api.route('/egresos', methods=['POST'])
+def post_egreso():
+    datos = request.get_json()
+    errores = validar_egreso(datos)
+    if errores:
+        return jsonify({'errores': errores}), 400
 
-        personas_con_derechos = query_con_derechos.all()
+    eg = Egreso(
+        fecha=datos['Fecha'],
+        monto=datos['Monto'],
+        descripcion=datos['Descripcion']
+    )
+    db.session.add(eg)
+    db.session.commit()
+    return jsonify({'mensaje':'Egreso creado','ID_Egreso': eg.id_egreso}),201
 
-        # Personas sin derechos asignados
-        query_sin_derechos = db.session.query(Persona).outerjoin(
-            PersonaDerecho, Persona.ID_Persona == PersonaDerecho.ID_Persona
-        ).filter(PersonaDerecho.ID_Derecho == None)
 
-        # Aplicar filtros a personas sin derechos
-        if derecho and derecho.lower() == 'sin derechos':
-            if nombre:
-                query_sin_derechos = query_sin_derechos.filter(Persona.Nombre.ilike(f'%{nombre}%'))
-            if dpi:
-                query_sin_derechos = query_sin_derechos.filter(Persona.DPI == dpi)
+@api.route('/egresos/<int:id>', methods=['PUT'])
+def put_egreso(id):
+    eg = Egreso.query.get_or_404(id)
+    d = request.get_json()
+    for key, attr in [('Fecha','fecha'),('Monto','monto'),('Descripcion','descripcion')]:
+        if key in d: setattr(eg, attr, d[key])
+    db.session.commit()
+    return jsonify({'mensaje':'Egreso actualizado'}),200
 
-        personas_sin_derechos = query_sin_derechos.all()
+@api.route('/egresos/<int:id>', methods=['DELETE'])
+def delete_egreso(id):
+    eg = Egreso.query.get_or_404(id)
+    db.session.delete(eg)
+    db.session.commit()
+    return jsonify({'mensaje':'Egreso eliminado'}),200
 
-        # Formatear resultados
-        con_derechos = [
-            {
-                'ID_Persona': fila.ID_Persona,
-                'Nombre': fila.Nombre,
-                'DPI': fila.DPI,
-                'Rol': fila.Rol,
-                'Telefono': fila.Telefono,
-                'Email': fila.Email,
-                'ID_Derecho': fila.ID_Derecho,
-                'Descripcion_Derecho': fila.Descripcion_Derecho,
-                'Fecha_Inicio': str(fila.Fecha_Inicio),
-                'Fecha_Fin': str(fila.Fecha_Fin) if fila.Fecha_Fin else 'Sin vencimiento'
-            } for fila in personas_con_derechos
-        ]
+@api.route('/fondos/disponibles', methods=['GET'])
+def fondos_disponibles():
+    total_i = db.session.query(db.func.sum(Ingreso.monto)).scalar() or 0
+    total_e = db.session.query(db.func.sum(Egreso.monto)).scalar() or 0
+    return jsonify({'fondos_disponibles': float(total_i - total_e)}),200
 
-        sin_derechos = [
-            {
-                'ID_Persona': persona.ID_Persona,
-                'Nombre': persona.Nombre,
-                'DPI': persona.DPI,
-                'Rol': persona.Rol,
-                'Telefono': persona.Telefono,
-                'Email': persona.Email,
-                'Descripcion_Derecho': 'Sin derechos',
-                'Fecha_Inicio': 'N/A',
-                'Fecha_Fin': 'N/A'
-            } for persona in personas_sin_derechos
-        ]
+@api.route('/egresos/total', methods=['GET'])
+def total_egresos():
+    total = db.session.query(db.func.sum(Egreso.monto)).scalar() or 0
+    return jsonify({'total_egresos': float(total)}),200
 
-        # Decidir qué lista retornar
-        if derecho and derecho.lower() == 'sin derechos':
-            resultado = sin_derechos
-        elif derecho:
-            resultado = con_derechos
-        else:
-            resultado = con_derechos + sin_derechos
 
-        return jsonify(resultado), 200
-    except Exception as e:
-        logging.error(f"Error al obtener detalle combinado de personas: {str(e)}")
-        return jsonify({'error': 'Error interno al obtener datos.'}), 500
-    
-@cuotas_bp.route('/cuotas/estado/mejorado', methods=['GET'])
-def obtener_cuotas_mejoradas():
-    try:
-        # Consultar cuotas con detalles avanzados
-        cuotas = db.session.query(
-            Cuota.ID_Cuota,
-            Cuota.Descripcion,
-            Cuota.Monto,
-            Cuota.Fecha_Inicio,
-            Cuota.Fecha_Vencimiento,
-            db.func.sum(Pago.Monto_Pagado).label('PagosRealizados'),
-            db.func.count(Pago.ID_Persona).label('Participantes')
-        ).outerjoin(Pago, Cuota.ID_Cuota == Pago.ID_Cuota).group_by(
-            Cuota.ID_Cuota, Cuota.Descripcion, Cuota.Monto, Cuota.Fecha_Inicio, Cuota.Fecha_Vencimiento
-        ).all()
-
-        # Formatear resultados
-        resultado = [
-            {
-                'ID_Cuota': cuota.ID_Cuota,
-                'Descripcion': cuota.Descripcion,
-                'Monto': cuota.Monto,
-                'PagosRealizados': cuota.PagosRealizados or 0,
-                'MontoPendiente': cuota.Monto - (cuota.PagosRealizados or 0),
-                'Estado': 'Completado' if cuota.PagosRealizados and cuota.PagosRealizados >= cuota.Monto else 'Pendiente',
-                'Fecha_Inicio': str(cuota.Fecha_Inicio),
-                'Fecha_Vencimiento': str(cuota.Fecha_Vencimiento) if cuota.Fecha_Vencimiento else 'Sin vencimiento',
-                'Participantes': cuota.Participantes
-            } for cuota in cuotas
-        ]
-
-        return jsonify(resultado), 200
-    except Exception as e:
-        logging.error(f"Error al obtener cuotas mejoradas: {str(e)}")
-        return jsonify({'error': 'Error interno al obtener datos de cuotas.'}), 500
-    
-    
-    
-@cuotas_bp.route('/cuotas/detalladas', methods=['GET'])
-def obtener_cuotas_detalladas():
-    try:
-        # Consultar cuotas
-        cuotas = db.session.query(
-            Cuota.ID_Cuota,
-            Cuota.Descripcion,
-            Cuota.Monto,
-            Cuota.Fecha_Inicio,
-            Cuota.Fecha_Vencimiento,
-            db.func.sum(Pago.Monto_Pagado).label('PagosRealizados'),
-            db.func.count(Pago.ID_Persona).label('Participantes')
-        ).outerjoin(Pago, Cuota.ID_Cuota == Pago.ID_Cuota).group_by(
-            Cuota.ID_Cuota, Cuota.Descripcion, Cuota.Monto, Cuota.Fecha_Inicio, Cuota.Fecha_Vencimiento
-        ).all()
-
-        # Formatear los resultados
-        resultado = [
-            {
-                'ID_Cuota': cuota.ID_Cuota,
-                'Descripcion': cuota.Descripcion,
-                'Monto': float(cuota.Monto) if cuota.Monto else 0.0,
-                'PagosRealizados': float(cuota.PagosRealizados) if cuota.PagosRealizados else 0.0,
-                'MontoPendiente': (float(cuota.Monto) - float(cuota.PagosRealizados)) if cuota.Monto and cuota.PagosRealizados else 0.0,
-                'Estado': 'Completado' if cuota.PagosRealizados and cuota.PagosRealizados >= cuota.Monto else 'Pendiente',
-                'Fecha_Inicio': str(cuota.Fecha_Inicio) if cuota.Fecha_Inicio else 'No definida',
-                'Fecha_Vencimiento': str(cuota.Fecha_Vencimiento) if cuota.Fecha_Vencimiento else 'Sin vencimiento',
-                'Participantes': cuota.Participantes or 0
-            } for cuota in cuotas
-        ]
-
-        return jsonify(resultado), 200
-    except Exception as e:
-        logging.error(f"Error al obtener cuotas detalladas: {str(e)}")
-        return jsonify({'error': 'Error interno al obtener datos de cuotas.'}), 500
-    
-    
-@cuotas_bp.route('/cuotas/con-pagos', methods=['GET'])
-def obtener_cuotas_con_pagos():
-    try:
-        # Consultar cuotas con sus respectivos pagos realizados
-        cuotas = db.session.query(
-            Cuota.ID_Cuota,
-            Cuota.Descripcion,
-            Cuota.Monto,
-            Cuota.Fecha_Limite,
-            db.func.sum(Pago.Monto_Pagado).label('PagosRealizados'),
-            db.func.count(Pago.ID_Persona).label('Participantes')
-        ).outerjoin(Pago, Cuota.ID_Cuota == Pago.ID_Cuota).group_by(
-            Cuota.ID_Cuota, Cuota.Descripcion, Cuota.Monto, Cuota.Fecha_Limite
-        ).all()
-
-        # Formatear los resultados
-        resultado = [
-            {
-                'ID_Cuota': cuota.ID_Cuota,
-                'Descripcion': cuota.Descripcion,
-                'Monto': float(cuota.Monto),
-                'PagosRealizados': float(cuota.PagosRealizados) if cuota.PagosRealizados else 0.0,
-                'MontoPendiente': (float(cuota.Monto) - float(cuota.PagosRealizados)) if cuota.PagosRealizados else float(cuota.Monto),
-                'Estado': 'Completado' if cuota.PagosRealizados and cuota.PagosRealizados >= cuota.Monto else 'Pendiente',
-                'Fecha_Limite': str(cuota.Fecha_Limite),
-                'Participantes': cuota.Participantes or 0
-            } for cuota in cuotas
-        ]
-
-        return jsonify(resultado), 200
-    except Exception as e:
-        logging.error(f"Error al obtener cuotas con pagos: {str(e)}")
-        return jsonify({'error': 'Error interno al obtener datos de cuotas y pagos.'}), 500

@@ -1,42 +1,54 @@
+// frontend/src/components/FormDerechos.js
+
 import React, { useState } from 'react';
-import api from '../services/api'; // Usamos Axios para conectar con el backend
+import api from '../services/api';
+import AlertList from './AlertList';
 
-const FormDerechos = ({ onSuccess }) => {
-    const [nombre, setNombre] = useState('');
-   
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await api.post('/derechos', { Nombre: nombre });
-            onSuccess(); // Recargar la tabla de derechos en la página principal
-            setNombre('');
-            alert('Derecho creado exitosamente');
-        } catch (error) {
-            if (error.response && error.response.data.errores) {
-                alert(`Error: ${error.response.data.errores.join(', ')}`);
-            } else {
-                alert('Hubo un problema al conectar con el servidor.');
-            }
-            console.error('Error al crear el derecho:', error);
-        }
-    };
+export default function FormDerechos({ onSuccess }) {
+  // Estado del input
+  const [nombre, setNombre] = useState('');
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-                <label htmlFor="nombre" className="form-label">Nombre del Derecho:</label>
-                <input
-                    type="text"
-                    id="nombre"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    className="form-control"
-                    required
-                />
-            </div>
-            <button type="submit" className="btn btn-primary">Crear Derecho</button>
-        </form>
-    );
-};
+  // Estados para mensajes
+  const [errores, setErrores] = useState([]);
+  const [success, setSuccess] = useState('');
 
-export default FormDerechos;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrores([]);
+    setSuccess('');
+
+    try {
+      const res = await api.post('/derechos', { Nombre: nombre });
+      setSuccess(res.data.mensaje || 'Derecho creado exitosamente');
+      setNombre('');
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      setErrores(err.response?.data?.errores || ['Error inesperado al crear el derecho.']);
+    }
+  };
+
+  return (
+    <>
+      {/* Mensajes */}
+      <AlertList errores={errores} success={success} />
+
+      <form onSubmit={handleSubmit} className="mb-4">
+        <h2>Crear Derecho</h2>
+
+        <div className="mb-3">
+          <label htmlFor="nombre" className="form-label">Nombre del Derecho:</label>
+          <input
+            type="text"
+            id="nombre"
+            className="form-control"
+            value={nombre}
+            onChange={e => setNombre(e.target.value)}
+            required
+          />
+        </div>
+
+        <button type="submit" className="btn btn-primary">Crear Derecho</button>
+      </form>
+    </>
+  );
+}

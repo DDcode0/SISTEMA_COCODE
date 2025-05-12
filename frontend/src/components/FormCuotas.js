@@ -1,74 +1,90 @@
+// frontend/src/components/FormCuotas.js
+
 import React, { useState } from 'react';
 import api from '../services/api';
+import AlertList from './AlertList';
 
-const FormCuotas = ({ onSuccess }) => {
-    const [descripcion, setDescripcion] = useState('');
-    const [monto, setMonto] = useState('');
-    const [fechaLimite, setFechaLimite] = useState('');
+export default function FormCuotas({ onSuccess }) {
+  // Estado del formulario
+  const [descripcion, setDescripcion] = useState('');
+  const [monto, setMonto] = useState('');
+  const [fechaLimite, setFechaLimite] = useState('');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const cuotaData = {
-            Descripcion: descripcion,
-            Monto: parseFloat(monto),
-            Fecha_Limite: fechaLimite,
-        };
-        console.log('Datos enviados al servidor:', cuotaData); // Registro para verificar los datos
-        try {
-            await api.post('/cuotas', cuotaData);
-            onSuccess();
-            setDescripcion('');
-            setMonto('');
-            setFechaLimite('');
-            alert('Cuota creada exitosamente');
-        } catch (error) {
-            console.error('Error al crear la cuota:', error);
-            if (error.response && error.response.data.errores) {
-                alert(`Errores: ${error.response.data.errores.join(', ')}`);
-            } else {
-                alert('Hubo un problema al conectar con el servidor.');
-            }
-        }
+  // Estados para mensajes
+  const [errores, setErrores] = useState([]);
+  const [success, setSuccess] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrores([]);
+    setSuccess('');
+
+    // Construimos el payload según la API
+    const payload = {
+      Descripcion: descripcion,
+      Monto: parseFloat(monto),
+      Fecha_Limite: fechaLimite,
     };
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-                <label htmlFor="descripcion" className="form-label">Descripción:</label>
-                <input
-                    type="text"
-                    id="descripcion"
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value)}
-                    className="form-control"
-                    required
-                />
-            </div>
-            <div className="mb-3">
-                <label htmlFor="monto" className="form-label">Monto:</label>
-                <input
-                    type="number"
-                    id="monto"
-                    value={monto}
-                    onChange={(e) => setMonto(e.target.value)}
-                    className="form-control"
-                    required
-                />
-            </div>
-            <div className="mb-3">
-                <label htmlFor="fechaLimite" className="form-label">Fecha Límite:</label>
-                <input
-                    type="date"
-                    id="fechaLimite"
-                    value={fechaLimite}
-                    onChange={(e) => setFechaLimite(e.target.value)}
-                    className="form-control"
-                    required
-                />
-            </div>
-            <button type="submit" className="btn btn-primary">Crear Cuota</button>
-        </form>
-    );
-};
+    try {
+      const res = await api.post('/cuotas', payload);
+      setSuccess(res.data.mensaje || 'Cuota creada exitosamente');
+      setDescripcion('');
+      setMonto('');
+      setFechaLimite('');
+      // Si el padre pasa un onSuccess, lo ejecutamos para recargar lista
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      setErrores(err.response?.data?.errores || ['Error inesperado al crear la cuota.']);
+    }
+  };
 
-export default FormCuotas;
+  return (
+    <>
+      {/* Mensajes de error / éxito */}
+      <AlertList errores={errores} success={success} />
+
+      <form onSubmit={handleSubmit}>
+        <h2>Crear Cuota</h2>
+
+        <div className="mb-3">
+          <label htmlFor="descripcion" className="form-label">Descripción:</label>
+          <input
+            type="text"
+            id="descripcion"
+            className="form-control"
+            value={descripcion}
+            onChange={e => setDescripcion(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor="monto" className="form-label">Monto:</label>
+          <input
+            type="number"
+            id="monto"
+            className="form-control"
+            value={monto}
+            onChange={e => setMonto(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor="fechaLimite" className="form-label">Fecha Límite:</label>
+          <input
+            type="date"
+            id="fechaLimite"
+            className="form-control"
+            value={fechaLimite}
+            onChange={e => setFechaLimite(e.target.value)}
+            required
+          />
+        </div>
+
+        <button type="submit" className="btn btn-primary">Crear Cuota</button>
+      </form>
+    </>
+  );
+}

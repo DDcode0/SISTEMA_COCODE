@@ -7,13 +7,14 @@ DB_CONFIG = {
     'username': 'cocode_Presidente',    # Usuario de SQL Server
     'password': 'cocode_Gest!ion'      # Contraseña del usuario
 }"""
-
+from flask_migrate import Migrate
 import logging
 from flask_cors import CORS
 
 from flask import Flask
 from app.extensions import db  # Importar la instancia de SQLAlchemy desde extensions
-from app.routes import personas_bp, derechos_bp, cuotas_bp, pagos_bp, ingresos_bp, egresos_bp, persona_derecho_bp# Importar los Blueprints
+
+from app.routes import api
 
 def create_app():
     app = Flask(__name__)
@@ -27,16 +28,12 @@ def create_app():
 
     # Inicializar extensiones
     db.init_app(app)
+    app.register_blueprint(api) 
 
+    migrate = Migrate(app, db)
     # Registrar Blueprints
     
-    app.register_blueprint(personas_bp, url_prefix='/api')  # Opcional: Usar prefijo '/api'
-    app.register_blueprint(derechos_bp, url_prefix='/api')  # Nuevo Blueprint para derechos
-    app.register_blueprint(cuotas_bp, url_prefix='/api')
-    app.register_blueprint(pagos_bp, url_prefix='/api')
-    app.register_blueprint(ingresos_bp, url_prefix='/api')
-    app.register_blueprint(egresos_bp, url_prefix='/api')
-    app.register_blueprint(persona_derecho_bp, url_prefix='/api')
+    
     
     #Configurar el sistema de logging global
     logging.basicConfig(
