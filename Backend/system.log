@@ -3803,3 +3803,135 @@ FROM [Personas] JOIN [Persona_Derecho] ON [Personas].[ID_Persona] = [Persona_Der
 2025-05-08 22:07:26,901 - INFO - 127.0.0.1 - - [08/May/2025 22:07:26] "GET /api/personas HTTP/1.1" 200 -
 2025-05-08 22:07:30,915 - INFO - 127.0.0.1 - - [08/May/2025 22:07:30] "[33mGET /api/pagos/cuota/1?ID_Persona=56 HTTP/1.1[0m" 404 -
 2025-05-08 22:07:33,587 - INFO - 127.0.0.1 - - [08/May/2025 22:07:33] "[33mGET /api/pagos/cuota/5?ID_Persona=56 HTTP/1.1[0m" 404 -
+2025-05-12 20:13:46,383 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-05-12 20:13:46,384 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-12 20:13:46,386 - INFO -  * Restarting with stat
+2025-05-12 20:13:47,007 - WARNING -  * Debugger is active!
+2025-05-12 20:13:47,020 - INFO -  * Debugger PIN: 224-807-424
+2025-05-12 20:17:13,901 - INFO - 127.0.0.1 - - [12/May/2025 20:17:13] "[33mGET /api/persona_derecho/detalle_combinado HTTP/1.1[0m" 404 -
+2025-05-12 20:17:13,903 - INFO - 127.0.0.1 - - [12/May/2025 20:17:13] "[33mGET /api/cuotas/con-pagos HTTP/1.1[0m" 404 -
+2025-05-12 20:36:16,070 - INFO - 127.0.0.1 - - [12/May/2025 20:36:16] "[33mGET /api/persona_derecho/detalle_combinado HTTP/1.1[0m" 404 -
+2025-05-12 20:36:16,072 - INFO - 127.0.0.1 - - [12/May/2025 20:36:16] "[33mGET /api/cuotas/con-pagos HTTP/1.1[0m" 404 -
+2025-05-12 20:36:25,845 - INFO - 127.0.0.1 - - [12/May/2025 20:36:25] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:37:09,983 - INFO - 127.0.0.1 - - [12/May/2025 20:37:09] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:38:40,110 - INFO - 127.0.0.1 - - [12/May/2025 20:38:40] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:39:01,454 - INFO - 127.0.0.1 - - [12/May/2025 20:39:01] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:39:02,750 - INFO - 127.0.0.1 - - [12/May/2025 20:39:02] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:39:03,006 - INFO - 127.0.0.1 - - [12/May/2025 20:39:03] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:50:39,316 - INFO - 127.0.0.1 - - [12/May/2025 20:50:39] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:50:51,591 - INFO - 127.0.0.1 - - [12/May/2025 20:50:51] "[31m[1mPOST /api/personas HTTP/1.1[0m" 400 -
+2025-05-12 20:52:36,515 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,519 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,525 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,529 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,533 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,537 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,544 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,547 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,551 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,554 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,560 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,563 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,566 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,569 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,572 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,577 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,581 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,584 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,592 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,595 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,596 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,598 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,602 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,606 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,611 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,617 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,617 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,621 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,624 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,630 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,632 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,637 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,640 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,644 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:36,648 - INFO - 127.0.0.1 - - [12/May/2025 20:52:36] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:52:52,793 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-05-12 20:52:52,794 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-12 20:52:52,797 - INFO -  * Restarting with stat
+2025-05-12 20:52:54,282 - WARNING -  * Debugger is active!
+2025-05-12 20:52:54,289 - INFO -  * Debugger PIN: 224-807-424
+2025-05-12 20:52:56,657 - INFO - 127.0.0.1 - - [12/May/2025 20:52:56] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:53:18,583 - INFO - 127.0.0.1 - - [12/May/2025 20:53:18] "[33mGET /api/persona_derecho/detalle_combinado HTTP/1.1[0m" 404 -
+2025-05-12 20:53:18,589 - INFO - 127.0.0.1 - - [12/May/2025 20:53:18] "[33mGET /api/cuotas/con-pagos HTTP/1.1[0m" 404 -
+2025-05-12 20:53:21,342 - INFO - 127.0.0.1 - - [12/May/2025 20:53:21] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:54:03,047 - INFO - 127.0.0.1 - - [12/May/2025 20:54:03] "OPTIONS /api/personas/1 HTTP/1.1" 200 -
+2025-05-12 20:54:03,075 - INFO - 127.0.0.1 - - [12/May/2025 20:54:03] "DELETE /api/personas/1 HTTP/1.1" 200 -
+2025-05-12 20:54:03,090 - INFO - 127.0.0.1 - - [12/May/2025 20:54:03] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:54:13,961 - INFO - 127.0.0.1 - - [12/May/2025 20:54:13] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:54:13,996 - INFO - 127.0.0.1 - - [12/May/2025 20:54:13] "[31m[1mPOST /api/personas HTTP/1.1[0m" 400 -
+2025-05-12 20:55:58,775 - INFO - 127.0.0.1 - - [12/May/2025 20:55:58] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 20:55:58,798 - INFO - 127.0.0.1 - - [12/May/2025 20:55:58] "[35m[1mPOST /api/personas HTTP/1.1[0m" 201 -
+2025-05-12 20:55:58,807 - INFO - 127.0.0.1 - - [12/May/2025 20:55:58] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 20:56:05,414 - INFO - 127.0.0.1 - - [12/May/2025 20:56:05] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:15:54,264 - INFO - 127.0.0.1 - - [12/May/2025 21:15:54] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:16:52,901 - INFO - 127.0.0.1 - - [12/May/2025 21:16:52] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:17:26,324 - INFO - 127.0.0.1 - - [12/May/2025 21:17:26] "[33mGET /api/persona_derecho/detalle_combinado HTTP/1.1[0m" 404 -
+2025-05-12 21:17:26,325 - INFO - 127.0.0.1 - - [12/May/2025 21:17:26] "[33mGET /api/cuotas/con-pagos HTTP/1.1[0m" 404 -
+2025-05-12 21:17:28,348 - INFO - 127.0.0.1 - - [12/May/2025 21:17:28] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:17:47,982 - INFO - 127.0.0.1 - - [12/May/2025 21:17:47] "OPTIONS /api/personas/21 HTTP/1.1" 200 -
+2025-05-12 21:17:48,008 - INFO - 127.0.0.1 - - [12/May/2025 21:17:48] "DELETE /api/personas/21 HTTP/1.1" 200 -
+2025-05-12 21:17:48,026 - INFO - 127.0.0.1 - - [12/May/2025 21:17:48] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:18:31,313 - INFO - 127.0.0.1 - - [12/May/2025 21:18:31] "OPTIONS /api/personas/47 HTTP/1.1" 200 -
+2025-05-12 21:18:31,333 - INFO - 127.0.0.1 - - [12/May/2025 21:18:31] "PUT /api/personas/47 HTTP/1.1" 200 -
+2025-05-12 21:18:31,347 - INFO - 127.0.0.1 - - [12/May/2025 21:18:31] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:28:39,254 - INFO - 127.0.0.1 - - [12/May/2025 21:28:39] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:29:23,267 - INFO - 127.0.0.1 - - [12/May/2025 21:29:23] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:29:32,249 - INFO - 127.0.0.1 - - [12/May/2025 21:29:32] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:30:25,243 - INFO - 127.0.0.1 - - [12/May/2025 21:30:25] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:31:01,257 - INFO - 127.0.0.1 - - [12/May/2025 21:31:01] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:31:14,601 - INFO - 127.0.0.1 - - [12/May/2025 21:31:14] "[33mGET /api/persona_derecho/detalle_combinado HTTP/1.1[0m" 404 -
+2025-05-12 21:31:14,604 - INFO - 127.0.0.1 - - [12/May/2025 21:31:14] "[33mGET /api/cuotas/con-pagos HTTP/1.1[0m" 404 -
+2025-05-12 21:31:16,681 - INFO - 127.0.0.1 - - [12/May/2025 21:31:16] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:32:45,858 - INFO - 127.0.0.1 - - [12/May/2025 21:32:45] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 21:32:45,883 - INFO - 127.0.0.1 - - [12/May/2025 21:32:45] "[31m[1mPOST /api/personas HTTP/1.1[0m" 400 -
+2025-05-12 21:33:26,994 - INFO - 127.0.0.1 - - [12/May/2025 21:33:26] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 21:33:27,007 - INFO - 127.0.0.1 - - [12/May/2025 21:33:27] "[31m[1mPOST /api/personas HTTP/1.1[0m" 400 -
+2025-05-12 21:33:33,100 - INFO - 127.0.0.1 - - [12/May/2025 21:33:33] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 21:33:33,131 - INFO - 127.0.0.1 - - [12/May/2025 21:33:33] "[35m[1mPOST /api/personas HTTP/1.1[0m" 201 -
+2025-05-12 21:33:33,151 - INFO - 127.0.0.1 - - [12/May/2025 21:33:33] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:33:38,316 - INFO - 127.0.0.1 - - [12/May/2025 21:33:38] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:34:05,959 - INFO - 127.0.0.1 - - [12/May/2025 21:34:05] "OPTIONS /api/personas/58 HTTP/1.1" 200 -
+2025-05-12 21:34:05,993 - INFO - 127.0.0.1 - - [12/May/2025 21:34:05] "DELETE /api/personas/58 HTTP/1.1" 200 -
+2025-05-12 21:34:06,011 - INFO - 127.0.0.1 - - [12/May/2025 21:34:06] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:34:10,591 - INFO - 127.0.0.1 - - [12/May/2025 21:34:10] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:34:39,823 - INFO - 127.0.0.1 - - [12/May/2025 21:34:39] "OPTIONS /api/personas/55 HTTP/1.1" 200 -
+2025-05-12 21:34:39,839 - INFO - 127.0.0.1 - - [12/May/2025 21:34:39] "DELETE /api/personas/55 HTTP/1.1" 200 -
+2025-05-12 21:34:39,856 - INFO - 127.0.0.1 - - [12/May/2025 21:34:39] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:34:46,874 - INFO - 127.0.0.1 - - [12/May/2025 21:34:46] "OPTIONS /api/personas/55 HTTP/1.1" 200 -
+2025-05-12 21:34:46,903 - INFO - 127.0.0.1 - - [12/May/2025 21:34:46] "DELETE /api/personas/55 HTTP/1.1" 200 -
+2025-05-12 21:34:46,927 - INFO - 127.0.0.1 - - [12/May/2025 21:34:46] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:34:55,814 - INFO - 127.0.0.1 - - [12/May/2025 21:34:55] "OPTIONS /api/personas/55 HTTP/1.1" 200 -
+2025-05-12 21:34:55,843 - INFO - 127.0.0.1 - - [12/May/2025 21:34:55] "DELETE /api/personas/55 HTTP/1.1" 200 -
+2025-05-12 21:34:55,860 - INFO - 127.0.0.1 - - [12/May/2025 21:34:55] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:35:00,203 - INFO - 127.0.0.1 - - [12/May/2025 21:35:00] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:49:29,235 - INFO - 127.0.0.1 - - [12/May/2025 21:49:29] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:49:41,405 - INFO - 127.0.0.1 - - [12/May/2025 21:49:41] "[33mGET /api/persona_derecho/detalle_combinado HTTP/1.1[0m" 404 -
+2025-05-12 21:49:41,408 - INFO - 127.0.0.1 - - [12/May/2025 21:49:41] "[33mGET /api/cuotas/con-pagos HTTP/1.1[0m" 404 -
+2025-05-12 21:49:42,850 - INFO - 127.0.0.1 - - [12/May/2025 21:49:42] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:49:53,468 - INFO - 127.0.0.1 - - [12/May/2025 21:49:53] "OPTIONS /api/personas/54 HTTP/1.1" 200 -
+2025-05-12 21:49:53,472 - INFO - 127.0.0.1 - - [12/May/2025 21:49:53] "DELETE /api/personas/54 HTTP/1.1" 200 -
+2025-05-12 21:49:53,481 - INFO - 127.0.0.1 - - [12/May/2025 21:49:53] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:50:01,437 - INFO - 127.0.0.1 - - [12/May/2025 21:50:01] "OPTIONS /api/personas/54 HTTP/1.1" 200 -
+2025-05-12 21:50:01,456 - INFO - 127.0.0.1 - - [12/May/2025 21:50:01] "DELETE /api/personas/54 HTTP/1.1" 200 -
+2025-05-12 21:50:01,466 - INFO - 127.0.0.1 - - [12/May/2025 21:50:01] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 21:50:57,537 - INFO - 127.0.0.1 - - [12/May/2025 21:50:57] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 21:50:57,554 - INFO - 127.0.0.1 - - [12/May/2025 21:50:57] "[31m[1mPOST /api/personas HTTP/1.1[0m" 400 -
+2025-05-12 21:51:18,677 - INFO - 127.0.0.1 - - [12/May/2025 21:51:18] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 21:51:18,695 - INFO - 127.0.0.1 - - [12/May/2025 21:51:18] "[31m[1mPOST /api/personas HTTP/1.1[0m" 400 -
+2025-05-12 21:51:24,938 - INFO - 127.0.0.1 - - [12/May/2025 21:51:24] "OPTIONS /api/personas HTTP/1.1" 200 -
+2025-05-12 21:51:24,958 - INFO - 127.0.0.1 - - [12/May/2025 21:51:24] "[35m[1mPOST /api/personas HTTP/1.1[0m" 201 -
+2025-05-12 21:51:24,969 - INFO - 127.0.0.1 - - [12/May/2025 21:51:24] "GET /api/personas HTTP/1.1" 200 -
+2025-05-12 22:00:33,505 - INFO -  * Detected change in 'C:\\Users\\balld\\Desktop\\PROYECTO SISTEMA_COCODE\\Backend\\app\\routes.py', reloading
+2025-05-12 22:00:33,598 - INFO -  * Restarting with stat

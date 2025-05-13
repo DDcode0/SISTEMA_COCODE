@@ -123,13 +123,12 @@ def put_persona(id):
 
 @api.route('/personas/<int:id>', methods=['DELETE'])
 def delete_persona(id):
-    """
-    En lugar de borrar la persona, cambia su estado a 'Inactivo'.
-    """
     p = Persona.query.get_or_404(id)
     p.estado = 'Inactivo'
+    p.rol = 'Sin rol'                 # <-- liberamos el rol
     db.session.commit()
-    return jsonify({'mensaje': 'Persona marcada como inactiva'}), 200
+    return jsonify({'mensaje':'Persona inactivada y rol liberado'}), 200
+
 
 
 # --------------------- Derechos ---------------------
