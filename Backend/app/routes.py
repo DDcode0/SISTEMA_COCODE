@@ -135,7 +135,7 @@ def delete_persona(id):
 @api.route('/derechos', methods=['GET'])
 def get_derechos():
     lista = Derecho.query.all()
-    return jsonify([{'ID_Derecho': d.id_derecho, 'Nombre': d.nombre} for d in lista]), 200
+    return jsonify([{'ID_Derecho': d.ID_Derecho, 'Nombre': d.Nombre} for d in lista]), 200
 
 @api.route('/derechos/<int:id>', methods=['GET'])
 def get_derecho(id):
@@ -172,12 +172,15 @@ def delete_derecho(id):
 @api.route('/cuotas', methods=['GET'])
 def get_cuotas():
     lista = Cuota.query.all()
-    return jsonify([{
-        'ID_Cuota': c.id_cuota,
-        'Descripcion': c.descripcion,
-        'Monto': float(c.monto),
-        'Fecha_Limite': str(c.fecha_limite)
-    } for c in lista]), 200
+    return jsonify([
+    {
+        'ID_Cuota': c.ID_Cuota,
+        'Descripcion': c.Descripcion,
+        'Monto': float(c.Monto),
+        'Fecha_Limite': str(c.Fecha_Limite)
+    }
+        for c in lista
+    ]), 200
 
 @api.route('/cuotas/<int:id>', methods=['GET'])
 def get_cuota(id):
@@ -251,44 +254,8 @@ def get_persona_derecho(pe, de):
         'Fecha_Fin': str(pd.fecha_fin) if pd.fecha_fin else None
     }), 200
 
-@api.route('/persona_derecho', methods=['POST'])
-def post_persona_derecho():
-    datos = request.get_json()
-    errores = validar_persona_derecho(datos)
-    if errores:
-        return jsonify({'errores': errores}), 400
 
-    # 1) Crear la asignación Derecho → Persona
-    asign = PersonaDerecho(
-        id_persona=datos['ID_Persona'],
-        id_derecho=datos['ID_Derecho'],
-        fecha_inicio=datos['Fecha_Inicio'],
-        fecha_fin=datos.get('Fecha_Fin')
-    )
-    db.session.add(asign)
-    db.session.flush()  # flush para tener el objeto en sesión
 
-    # 2) Buscar todas las cuotas que corresponden a ese derecho
-    cuotas_asociadas = (
-        db.session.query(DerechoCuota.id_cuota)
-                  .filter_by(id_derecho=datos['ID_Derecho'])
-                  .all()
-    )
-    # cuotas_asociadas es lista de tuplas [(cuota1,), (cuota2,), ...]
-
-    # 3) Por cada cuota, crear una entrada en Persona_Cuota
-    for (id_cuota,) in cuotas_asociadas:
-        persona_cuota = PersonaCuota(
-            id_persona=datos['ID_Persona'],
-            id_cuota=id_cuota,
-            fecha_asig=datos['Fecha_Inicio'],
-            estado='Pendiente'
-        )
-        db.session.add(persona_cuota)
-
-    # 4) Commit final
-    db.session.commit()
-    return jsonify({'mensaje':'Asignación creada y cuotas generadas'}), 201
 
 @api.route('/persona_derecho/<int:pe>/<int:de>', methods=['PUT'])
 def put_persona_derecho(pe, de):
@@ -495,5 +462,110 @@ def fondos_disponibles():
 def total_egresos():
     total = db.session.query(db.func.sum(Egreso.monto)).scalar() or 0
     return jsonify({'total_egresos': float(total)}),200
+
+
+
+# --------------------- Vincular Derecho ↔ Cuota ---------------------
+@api.route('/derechos/<int:id_derecho>/vincular-cuota', methods=['POST'])
+def vincular_cuota_a_derecho(id_derecho):
+    datos = request.get_json()
+    id_cuota = datos.get('ID_Cuota')
+    # 1) Validaciones básicas
+    if not id_cuota:
+        return jsonify({'errores': ['ID_Cuota es obligatorio.']}), 400
+    # Verificar que existan los registros
+    derecho = Derecho.query.get(id_derecho)
+    if not derecho:
+        return jsonify({'errores': [f'Derecho {id_derecho} no encontrado.']}), 404
+    cuota = Cuota.query.get(id_cuota)
+    if not cuota:
+        return jsonify({'errores': [f'Cuota {id_cuota} no encontrada.']}), 404
+
+    # 2) Evitar duplicados
+    existe = DerechoCuota.query.filter_by(
+        ID_Derecho=id_derecho, ID_Cuota=id_cuota
+    ).first()
+    if existe:
+        return jsonify({'errores': ['Esta cuota ya está vinculada a este derecho.']}), 400
+
+    # 3) Crear la relación
+    enlace = DerechoCuota(ID_Derecho=id_derecho, ID_Cuota=id_cuota)
+    db.session.add(enlace)
+    db.session.commit()
+    return jsonify({
+        'mensaje': 'Cuota vinculada al derecho exitosamente',
+        'ID_Derecho': id_derecho,
+        'ID_Cuota': id_cuota
+    }), 201
+
+
+@api.route('/derecho_cuota', methods=['POST'])
+def post_derecho_cuota():
+    datos = request.get_json()
+    id_d  = datos.get('ID_Derecho')
+    id_c  = datos.get('ID_Cuota')
+    # Validar existencia
+    derecho = Derecho.query.get_or_404(id_d)
+    cuota   = Cuota.query.get_or_404(id_c)
+
+    # Evitar duplicados
+    existe = DerechoCuota.query.filter_by(ID_Derecho=id_d, ID_Cuota=id_c).first()
+    if existe:
+        return jsonify({'mensaje':'Ya está vinculada'}), 400
+
+    enlace = DerechoCuota(ID_Derecho=id_d, ID_Cuota=id_c)
+    db.session.add(enlace)
+    db.session.commit()
+    return jsonify({
+        'mensaje':'Vinculación creada',
+        'ID_Derecho': id_d,
+        'ID_Cuota': id_c
+    }), 201
+
+
+@api.route('/persona_derecho', methods=['POST'])
+def post_persona_derecho():
+    datos = request.get_json()
+    # 1) Validar datos básicos
+    errores = validar_persona_derecho(datos)
+    if errores:
+        return jsonify({'errores': errores}), 400
+
+    # 2) Recuperar la persona. Si no existe, Flask dará 404 automáticamente.
+    persona = Persona.query.get_or_404(datos['ID_Persona'])
+
+    # 3) Crear el registro en Persona_Derecho
+    pd = PersonaDerecho(
+        ID_Persona   = datos['ID_Persona'],
+        ID_Derecho   = datos['ID_Derecho'],
+        Fecha_Inicio = datos['Fecha_Inicio'],
+        Fecha_Fin    = datos.get('Fecha_Fin')  # opcional
+    )
+    db.session.add(pd)
+
+    # 4) **Parte NUEVA**: por cada cuota vinculada al derecho,
+    #    creamos un PersonaCuota con estado 'Pendiente'
+    #    Suponemos que en PersonaDerecho tienes relación con Derecho:
+    #    pd.derecho → instancia de Derecho
+    for enlace in pd.derecho.cuotas_asociadas:
+        pc = PersonaCuota(
+            ID_Persona = persona.ID_Persona,
+            ID_Cuota   = enlace.ID_Cuota,
+            Fecha_Asig = datos['Fecha_Inicio'],
+            Estado     = 'Pendiente'
+        )
+        db.session.add(pc)
+
+    # 5) Guardar todo en la base de datos
+    db.session.commit()
+
+    # 6) Responder con éxito
+    return jsonify({
+        'mensaje': 'Asignación creada y cuotas preasignadas',
+        'ID_Persona': persona.ID_Persona,
+        'ID_Derecho': datos['ID_Derecho']
+    }), 201
+
+    
 
 
